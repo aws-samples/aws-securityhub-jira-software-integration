@@ -1,0 +1,19 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Resoures needed by LPT
+
+Parameters:
+  BucketName:
+    Description: Bucket for the  artifacts 
+    Type: String
+Resources:
+  LptBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName: !Ref BucketName
+Outputs:
+  LptBucket:
+    Value: !Ref LptBucket

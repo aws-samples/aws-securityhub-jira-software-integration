@@ -1,0 +1,58 @@
+{
+  "version": "0",
+  "id": "8e5622f9-d81c-4d81-612a-9319e7ee2506",
+  "detail-type": "Security Hub Findings - Imported",
+  "source": "aws.securityhub",
+  "account": "123456789012",
+  "time": "2019-04-11T21:52:17Z",
+  "region": "eu-west-1",
+  "resources": [
+      "arn:aws:securityhub:eu-west-1::product/aws/macie/arn:aws:macie:us-west-2:123456789012:integtest/trigger/6294d71b927c41cbab915159a8f326a3/alert/f2893b211841"
+  ],
+  "detail": {
+      "findings": [
+        {
+            "SchemaVersion": "2018-10-08",
+            "Id": "prowler-7.59-123456789012-eu-west-1-eu-west-1_Potential_secret_found_in_Lambda_function_pp-security-pipeline-notifications-v3-pipeline_variables",
+            "ProductArn": "arn:aws:securityhub:eu-west-1:123456789012:product/123456789012/default",
+            "GeneratorId": "prowler-extra759",
+            "AwsAccountId": "123456789012",
+            "Types": [
+              "Software and Configuration Checks"
+            ],
+            "FirstObservedAt": "2020-09-19T03:22:01Z",
+            "CreatedAt": "2020-09-15T07:00:56Z",
+            "UpdatedAt": "2020-09-22T07:01:38Z",
+            "Severity": {
+              "Label": "HIGH",
+              "Normalized": 70
+            },
+            "Title": "[extra759] Find secrets in Lambda functions variables (Not Scored) (Not part of CIS benchmark)",
+            "Description": "eu-west-1: Potential secret found in Lambda function pp-security-pipeline-notifications-pipeline variables",
+            "ProductFields": {
+              "ProviderName": "Prowler",
+              "ProviderVersion": "2.3.0RC3",
+              "aws/securityhub/FindingId": "arn:aws:securityhub:eu-west-1:123456789012:product/123456789012/default/prowler-7.59-123456789012-eu-west-1-eu-west-1_Potential_secret_found_in_Lambda_function_pp-security-pipeline-notifications-pipeline_variables",
+              "aws/securityhub/ProductName": "Default",
+              "aws/securityhub/CompanyName": "Personal"
+            },
+            "Resources": [
+              {
+                "Type": "AwsLambdaFunction",
+                "Id": "AWS::::Account:123456789012",
+                "Partition": "aws",
+                "Region": "eu-west-1"
+              }
+            ],
+            "Compliance": {
+              "Status": "FAILED"
+            },
+            "WorkflowState": "NEW",
+            "Workflow": {
+              "Status": "NEW"
+            },
+            "RecordState": "ARCHIVED"
+        }
+      ]
+  }
+}

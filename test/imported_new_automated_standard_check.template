@@ -1,0 +1,92 @@
+{
+    "version": "0",
+    "id": "8e5622f9-d81c-4d81-612a-9319e7ee2506",
+    "detail-type": "Security Hub Findings - Imported",
+    "source": "aws.securityhub",
+    "account": "123456789012",
+    "time": "2019-04-11T21:52:17Z",
+    "region": "eu-west-1",
+    "resources": [
+        "arn:aws:securityhub:eu-west-1::product/aws/macie/arn:aws:macie:us-west-2:123456789012:integtest/trigger/6294d71b927c41cbab915159a8f326a3/alert/f2893b211841"
+    ],
+    "detail": {
+        "findings": [
+            {
+                "SchemaVersion": "2018-10-08",
+                "Id": "arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0/1.22/finding/dedc1e61-e4e6-448e-87d3-c7d1709334a3",
+                "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub",
+                "GeneratorId": "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0/rule/1.22",
+                "AwsAccountId": "123456789012",
+                "Types": [
+                  "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+                ],
+                "FirstObservedAt": "2020-07-22T17:12:27.005Z",
+                "LastObservedAt": "2020-11-10T21:07:43.968Z",
+                "CreatedAt": "2020-07-22T17:12:27.005Z",
+                "UpdatedAt": "2020-11-10T21:07:43.287Z",
+                "Severity": {
+                  "Product": 70,
+                  "Label": "HIGH",
+                  "Normalized": 70,
+                  "Original": "HIGH"
+                },
+                "Title": "1.22 Ensure IAM policies that allow full \"*:*\" administrative privileges are not created",
+                "Description": "IAM policies are the means by which privileges are granted to users, groups, or roles. It is recommended and considered a standard security advice to grant least privilege—that is, granting only the permissions required to perform a task. Determine what users need to do and then craft policies for them that let the users perform only those tasks, instead of allowing full administrative privileges.",
+                "Remediation": {
+                  "Recommendation": {
+                    "Text": "For directions on how to fix this issue, please consult the AWS Security Hub CIS documentation.",
+                    "Url": "https://docs.aws.amazon.com/console/securityhub/standards-cis-1.22/remediation"
+                  }
+                },
+                "ProductFields": {
+                  "StandardsGuideArn": "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0",
+                  "StandardsGuideSubscriptionArn": "arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0",
+                  "RuleId": "1.22",
+                  "RecommendationUrl": "https://docs.aws.amazon.com/console/securityhub/standards-cis-1.22/remediation",
+                  "RelatedAWSResources:0/name": "securityhub-iam-policy-no-statements-with-admin-access-dcb0d040",
+                  "RelatedAWSResources:0/type": "AWS::Config::ConfigRule",
+                  "StandardsControlArn": "arn:aws:securityhub:eu-west-1:123456789012:control/cis-aws-foundations-benchmark/v/1.2.0/1.22",
+                  "aws/securityhub/ProductName": "Security Hub",
+                  "aws/securityhub/CompanyName": "AWS",
+                  "aws/securityhub/FindingId": "arn:aws:securityhub:eu-west-1::product/aws/securityhub/arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0/1.22/finding/dedc1e61-e4e6-448e-87d3-c7d1709334a3"
+                },
+                "Resources": [
+                  {
+                    "Type": "AwsIamPolicy",
+                    "Id": "arn:aws:iam::123456789012:policy/AdminAccessCustom",
+                    "Partition": "aws",
+                    "Region": "eu-west-1",
+                    "Details": {
+                      "AwsIamPolicy": {
+                        "AttachmentCount": 1,
+                        "CreateDate": "2020-07-22T17:00:49.000Z",
+                        "DefaultVersionId": "v1",
+                        "IsAttachable": true,
+                        "Path": "/",
+                        "PermissionsBoundaryUsageCount": 0,
+                        "PolicyId": "ANPA6CQ2O7EC27CMBJAJF",
+                        "PolicyName": "AdminAccessCustom",
+                        "PolicyVersionList": [
+                          {
+                            "VersionId": "v1",
+                            "IsDefaultVersion": true,
+                            "CreateDate": "2020-07-22T17:00:49.000Z"
+                          }
+                        ],
+                        "UpdateDate": "2020-07-22T17:00:49.000Z"
+                      }
+                    }
+                  }
+                ],
+                "Compliance": {
+                  "Status": "FAILED"
+                },
+                "WorkflowState": "NEW",
+                "Workflow": {
+                  "Status": "NEW"
+                },
+                "RecordState": "ACTIVE"
+              }
+        ]
+    }
+  }

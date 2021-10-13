@@ -1,0 +1,58 @@
+{
+  "version": "0",
+  "id": "8e5622f9-d81c-4d81-612a-9319e7ee2506",
+  "detail-type": "Security Hub Findings - Imported",
+  "source": "aws.securityhub",
+  "account": "123456789012",
+  "time": "2019-04-11T21:52:17Z",
+  "region": "eu-west-1",
+  "resources": [
+      "arn:aws:securityhub:eu-west-1::product/aws/macie/arn:aws:macie:us-west-2:123456789012:integtest/trigger/6294d71b927c41cbab915159a8f326a3/alert/f2893b211841"
+  ],
+  "detail": {
+      "findings": [
+        {
+            "SchemaVersion": "2018-10-08",
+            "Id": "prowler-vw-7.48-123456789012-eu-west-1-eu-west-1_Found_Security_Group_sg-0b3e8a0656506e3d4_open_to_0.0.0.0_0",
+            "ProductArn": "arn:aws:securityhub:eu-west-1:123456789012:product/123456789012/default",
+            "GeneratorId": "prowler-extra748",
+            "AwsAccountId": "927700105111",
+            "Types": [
+            "Software and Configuration Checks-Policy:[extra748] Ensure no security groups allow ingress from 0.0.0.0/0 or ::/0 to any port"
+            ],
+            "FirstObservedAt": "2020-10-27T11:38:41Z",
+            "CreatedAt": "2020-09-24T11:19:52Z",
+            "UpdatedAt": "2020-10-27T11:38:41Z",
+            "Severity": {
+            "Label": "HIGH",
+            "Normalized": 70
+            },
+            "Title": "[extra748] Ensure no security groups allow ingress from 0.0.0.0/0 or ::/0 to any port",
+            "Description": "eu-west-1: Found Security Group: sg-0b3e8a0656506e3d3 open to 0.0.0.0/0",
+            "ProductFields": {
+            "ProviderName": "Prowler",
+            "ProviderVersion": "2.3.0RC3",
+            "aws/securityhub/FindingId": "arn:aws:securityhub:eu-west-1:123456789012:product/123456789012/default/prowler-vw-7.48-123456789012-eu-west-1-eu-west-1_Found_Security_Group_sg-0b3e8a0656506e3d3_open_to_0.0.0.0_0",
+            "aws/securityhub/ProductName": "Default",
+            "aws/securityhub/CompanyName": "Personal"
+            },
+            "Resources": [
+            {
+                "Type": "AwsEc2SecurityGroup",
+                "Id": "AWS::::Account:123456789012",
+                "Partition": "aws",
+                "Region": "eu-west-1"
+            }
+            ],
+            "Compliance": {
+            "Status": "FAILED"
+            },
+            "WorkflowState": "NEW",
+            "Workflow": {
+            "Status": "NEW"
+            },
+            "RecordState": "ACTIVE"
+  }
+      ]
+  }
+}

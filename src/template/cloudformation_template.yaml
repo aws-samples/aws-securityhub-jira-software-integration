@@ -1,0 +1,242 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: Bidirectional integration of Security Hub with JIRA
+
+Parameters:
+  ScheduleExpression:
+    Type: String
+    Default: "rate(1 day)"
+  Environment:
+    Description: Environment Name. Used for tagging.
+    Type: String
+    Default: prod
+  OrganizationAccessRole:
+    Default: OrganizationsReadOnlyAccess
+    Type: String
+    Description: Role to assume the organization account to read organization tags
+  OrganizationAccessExternalId:
+    Type: String
+    Description: External Id used to assume role to organization management account
+    Default: ''
+  OrganizationManagementAccountId:
+    Description: Organization management account Id
+    Type: String
+    MinLength: 12
+    MaxLength: 12
+  JIRADefaultAssignee:
+    Description: JIRA User Id for default assignee
+    Type: String
+  JIRAInstance:
+    Description: JIRA Instance URL
+    Type: String
+  JIRAProjectKey:
+    Description: JIRA Project Key
+    Type: String
+  JIRAIssueType:
+    Description: JIRA Issue Type
+    Type: String
+
+Resources:
+  LambdaServiceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: !Sub securityhub-jira-lambda-role-${Environment}-${AWS::Region}
+      Description: "Lambda role for importing findings from Security Hub"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: !Sub securityhub-jira-lambda-${Environment}-${AWS::Region}
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "securityhub:BatchImportFindings"
+                  - "securityhub:UpdateFindings"
+                  - "securityhub:BatchUpdateFindings"
+                  - "securityhub:GetFindings"
+                Resource:
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - "sts:AssumeRole"
+                Resource:
+                  - !Sub "arn:aws:iam::*:role/${OrganizationAccessRole}"
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetResourcePolicy
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                  - secretsmanager:ListSecretVersionIds
+                Resource:
+                  - !Ref JIRAUsernameSecret
+                  - !Ref JIRAAPITokenSecret
+
+  JIRASecHubCWRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: This CW rule helps keep Security Hub in sync with JIRA updates
+      Name: !Sub securityhub-change-status-${Environment}
+      EventPattern:
+        source:
+          - aws.securityhub
+        detail-type:
+          - Security Hub Findings - Custom Action
+          - Security Hub Findings - Imported
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt JIRASecHubFunction.Arn
+          Id: "TargetFunctionV1"
+
+  JIRAUsernameSecret:
+    Type: "AWS::SecretsManager::Secret"
+    Properties:
+      Name: JiraUsername
+      Description: "JIRA Username"
+
+  JIRAAPITokenSecret:
+    Type: "AWS::SecretsManager::Secret"
+    Properties:
+      Name: JiraAPIToken
+      Description: "JIRA API Token"
+
+  PermissionForEventsToInvokeIntegrationLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: "JIRASecHubFunction"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn:
+        Fn::GetAtt:
+          - "JIRASecHubCWRule"
+          - "Arn"
+
+  JIRASecHubFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub securityhub-jira-lambda-import-${Environment}
+      Description: Lambda integrates Security Hub to JIRA
+      Handler: "security_hub_integration.lambda_handler"
+      Role:
+        Fn::GetAtt:
+          - LambdaServiceRole
+          - Arn
+      Runtime: python3.7
+      Timeout: 300
+      Code: ../../dist/lambda.zip
+      Environment:
+        Variables:
+          JIRA_USERNAME: !Ref JIRAUsernameSecret
+          JIRA_API_TOKEN: !Ref JIRAAPITokenSecret
+          ORG_ACCOUNT_ID: !Ref OrganizationManagementAccountId
+          ORG_ROLE: !Ref OrganizationAccessRole
+          EXTERNAL_ID: !Ref OrganizationAccessExternalId
+          JIRA_DEFAULT_ASSIGNEE: !Ref JIRADefaultAssignee
+          JIRA_ISSUETYPE: !Ref JIRAIssueType
+          JIRA_PROJECT_KEY: !Ref JIRAProjectKey
+          JIRA_INSTANCE: !Ref JIRAInstance
+
+  RefreshJIRASecHubCWRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Keep Security Hub findings in sync with JIRA updates
+      Name: !Sub securityhub-jira-refresh-${Environment}
+      ScheduleExpression: !Ref ScheduleExpression
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt RefreshJIRASecHubFunction.Arn
+          Id: "TargetFunctionV1"
+
+  PermissionForEventsToInvokeRefreshLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: "RefreshJIRASecHubFunction"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn:
+        Fn::GetAtt:
+          - "RefreshJIRASecHubCWRule"
+          - "Arn"
+
+  RefreshJIRASecHubFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub securityhub-jira-refresh-${Environment}
+      Description: Update findings in Security Hub according to JIRA changes
+      Handler: "sync_securityhub.lambda_handler"
+      Role:
+        Fn::GetAtt:
+          - LambdaServiceRole
+          - Arn
+      Runtime: python3.7
+      Timeout: 300
+      Code: ../../dist/lambda.zip
+      Environment:
+        Variables:
+          JIRA_USERNAME: !Ref JIRAUsernameSecret
+          JIRA_API_TOKEN: !Ref JIRAAPITokenSecret
+          JIRA_INSTANCE: !Ref JIRAInstance
+
+  AlarmSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      KmsMasterKeyId: alias/aws/sns
+      TopicName: !Sub "securityhub-jira-alarm-topic-${Environment}"
+
+  CloudWatchAlarmImport:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmDescription: "Lambda Critical Error Alarm for Security Hub -> JIRA integration"
+      AlarmName: !Sub securityhub-jira-alarm-import-${Environment}
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref AlarmSNSTopic
+      MetricName: "Errors"
+      Namespace: "AWS/Lambda"
+      Statistic: "Sum"
+      Dimensions:
+        - Name: "FunctionName"
+          Value: !Ref JIRASecHubFunction
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: "GreaterThanThreshold"
+      TreatMissingData: "notBreaching"
+
+  CloudWatchAlarmRefresh:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmDescription: "Lambda Critical Error Alarm for JIRA -> Security Hub integration"
+      AlarmName: !Sub securityhub-jira-alarm-refresh-${Environment}
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref AlarmSNSTopic
+      MetricName: "Errors"
+      Namespace: "AWS/Lambda"
+      Statistic: "Sum"
+      Dimensions:
+        - Name: "FunctionName"
+          Value: !Ref RefreshJIRASecHubFunction
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: "GreaterThanThreshold"
+      TreatMissingData: "notBreaching"

@@ -1,0 +1,9 @@
+{
+    "Controls" : {
+        "eu-west-1": [
+         "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0/rule/1.22"
+     ],
+        "default": [
+     ]
+    } 
+ }
