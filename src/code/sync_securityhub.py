@@ -20,16 +20,14 @@ secretsmanager = boto3.client('secretsmanager')
 
 def lambda_handler(event, context):
     utils.validate_environments(
-        ["JIRA_USERNAME", "JIRA_API_TOKEN", "AWS_REGION"])
-    username_secret_name = os.environ.get("JIRA_USERNAME")
+        ["JIRA_API_TOKEN", "AWS_REGION"])
     apitoken_secret_name = os.environ.get("JIRA_API_TOKEN")
     region = os.environ['AWS_REGION']
     jira_instance = os.environ['JIRA_INSTANCE']
     project_key = os.environ['JIRA_PROJECT_KEY']
     issuetype_name = os.environ['JIRA_ISSUETYPE']
 
-    jira_client = JIRA(jira_instance,
-                       basic_auth=(utils.get_secret(secretsmanager, username_secret_name, region), utils.get_secret(secretsmanager, username_secret_name, region)))  # Authentication
+    jira_client = JIRA(jira_instance, token_auth=utils.get_secret(secretsmanager, apitoken_secret_name, region))  # Authentication
     latest = utils.get_jira_latest_updated_findings(
         jira_client, project_key, issuetype_name)
     for ticket in latest:

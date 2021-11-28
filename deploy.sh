@@ -53,7 +53,7 @@ for regx in ${REGIONS[@]}; do
 	cp -r src/* dist/
 
 	# Install JIRA from master (assign_issue GDPR)
-	INSTALL_PREREQUISITES=$(cd dist/code && pip3 install -t . git+https://github.com/pycontribs/jira.git)
+	INSTALL_PREREQUISITES=$(cd dist/code && pip3 install -t . jira==3.1.1)
 
 	# ZIP Dependency
 	INSTALL_LAMBDA=$(cd dist/code && zip -r9 ../lambda.zip ./)

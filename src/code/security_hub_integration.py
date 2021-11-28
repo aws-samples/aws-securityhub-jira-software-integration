@@ -42,6 +42,15 @@ def create_jira(jira_client, project_key, issuetype_name, product_arn, account, 
         securityhub, id, product_arn, "NOTIFIED", 'JIRA Ticket: {0}'.format(new_issue))
     utils.update_jira_assignee(jira_client, new_issue, account)
 
+def get_jira_client():
+    region = os.environ['AWS_REGION']
+    jira_instance = os.environ['JIRA_INSTANCE']
+    apitoken_secret_name = os.environ.get("JIRA_API_TOKEN")
+
+    jira_client = JIRA(jira_instance, token_auth=utils.get_secret(secretsmanager, apitoken_secret_name, region))  # Authentication
+
+    return jira_client
+
 def is_automated_check(finding):
     script_dir = os.path.dirname(__file__)
     with open(os.path.join(script_dir, "config/config.json")) as config_file:
@@ -54,26 +63,16 @@ def is_automated_check(finding):
 
 def lambda_handler(event, context):  # Main function
     utils.validate_environments(
-        ["JIRA_USERNAME", "JIRA_API_TOKEN", "AWS_REGION"])
+        ["JIRA_API_TOKEN", "AWS_REGION"])
 
     account_id = event["account"]
-    username_secret_name = os.environ.get("JIRA_USERNAME")
-    apitoken_secret_name = os.environ.get("JIRA_API_TOKEN")
     region = os.environ['AWS_REGION']
-    jira_instance = os.environ['JIRA_INSTANCE']
     project_key = os.environ['JIRA_PROJECT_KEY']
     issuetype_name = os.environ['JIRA_ISSUETYPE']
-
-    jira_client = JIRA(jira_instance,
-                       basic_auth=(utils.get_secret(secretsmanager, username_secret_name, region), utils.get_secret(secretsmanager, apitoken_secret_name, region)))  # Authentication
 
     for finding in event["detail"]["findings"]:
         account, description, severity, title, finding_id, product_arn, resources, status, recordstate = finding_parser(
             finding)
-        jira_issue = utils.get_jira_finding(
-            jira_client, finding_id, project_key, issuetype_name)
-        if jira_issue:
-            logger.info("JIRA found: %s for %s", jira_issue, finding_id)
         try:
             if event["detail-type"] == "Security Hub Findings - Custom Action" and event["detail"]["actionName"] == "CreateJiraIssue":
                 if status != "NEW":
@@ -81,27 +80,45 @@ def lambda_handler(event, context):  # Main function
                         "Finding workflow is not NEW: %s" % finding_id)
                 if recordstate != "ACTIVE":
                     raise UserWarning("Finding is not ACTIVE: %s" % finding_id)
+                jira_client = get_jira_client()
+                jira_issue = utils.get_jira_finding(
+                    jira_client, finding_id, project_key, issuetype_name)
                 if not jira_issue:
                     logger.info(
                         "Creating ticket manually for {0}".format(finding_id))
                     create_jira(jira_client, project_key, issuetype_name, product_arn, account,
                                 region, description, resources, severity, title, finding_id)
-
+                else:
+                    logger.info("Finding {0} already reported in ticket {1}".format(finding_id,jira_issue))
             elif event["detail-type"] == "Security Hub Findings - Imported":
-                if recordstate == "ARCHIVED" and status == "NOTIFIED" and jira_issue:
+                if recordstate == "ARCHIVED" and status == "NOTIFIED":
                     # Move to resolved
-                    utils.close_jira_issue(jira_client, jira_issue)
-                    utils.update_securityhub(securityhub, finding_id, product_arn, "RESOLVED",
-                                             'Closed JIRA Ticket {0}'.format(jira_issue))
-                elif recordstate == "ACTIVE" and status == "RESOLVED" and jira_issue:
-                    if utils.is_closed(jira_client, jira_issue):
+                    jira_client = get_jira_client()
+                    jira_issue = utils.get_jira_finding(
+                        jira_client, finding_id, project_key, issuetype_name)
+
+                    if(jira_issue):
+                        utils.close_jira_issue(jira_client, jira_issue)
+                        utils.update_securityhub(securityhub, finding_id, product_arn, "RESOLVED",
+                                                'Closed JIRA Ticket {0}'.format(jira_issue))
+                elif recordstate == "ACTIVE" and status == "RESOLVED":
+                    # Move to resolved
+                    jira_client = get_jira_client()
+                    jira_issue = utils.get_jira_finding(
+                        jira_client, finding_id, project_key, issuetype_name)
+
+                    if(jira_issue) and utils.is_closed(jira_client, jira_issue):
                         # Reopen closed ticket as it was re-detected
                         utils.reopen_jira_issue(jira_client, jira_issue)
                         utils.update_securityhub(securityhub, finding_id, product_arn, "NOTIFIED",
-                                                 'Reopening JIRA Ticket {0}'.format(jira_issue))
-                elif recordstate == "ACTIVE" and status == "NEW":
+                                                'Reopening JIRA Ticket {0}'.format(jira_issue))
+                elif recordstate == "ACTIVE" and status == "NEW" and is_automated_check(finding):
                     # Check if in automatically list of findings to create automatically
-                    if is_automated_check(finding) and not jira_issue:
+                    jira_client = get_jira_client()
+                    jira_issue = utils.get_jira_finding(
+                        jira_client, finding_id, project_key, issuetype_name)
+
+                    if not jira_issue:
                         logger.info(
                             "Creating ticket automatically for {0}".format(finding_id))
                         create_jira(jira_client, project_key, issuetype_name, product_arn, account,

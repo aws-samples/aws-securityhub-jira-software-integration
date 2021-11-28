@@ -83,7 +83,6 @@ Resources:
                   - secretsmanager:DescribeSecret
                   - secretsmanager:ListSecretVersionIds
                 Resource:
-                  - !Ref JIRAUsernameSecret
                   - !Ref JIRAAPITokenSecret
 
   JIRASecHubCWRule:
@@ -101,12 +100,6 @@ Resources:
       Targets:
         - Arn: !GetAtt JIRASecHubFunction.Arn
           Id: "TargetFunctionV1"
-
-  JIRAUsernameSecret:
-    Type: "AWS::SecretsManager::Secret"
-    Properties:
-      Name: JiraUsername
-      Description: "JIRA Username"
 
   JIRAAPITokenSecret:
     Type: "AWS::SecretsManager::Secret"
@@ -141,7 +134,6 @@ Resources:
       Code: ../../dist/lambda.zip
       Environment:
         Variables:
-          JIRA_USERNAME: !Ref JIRAUsernameSecret
           JIRA_API_TOKEN: !Ref JIRAAPITokenSecret
           ORG_ACCOUNT_ID: !Ref OrganizationManagementAccountId
           ORG_ROLE: !Ref OrganizationAccessRole
@@ -189,9 +181,10 @@ Resources:
       Code: ../../dist/lambda.zip
       Environment:
         Variables:
-          JIRA_USERNAME: !Ref JIRAUsernameSecret
           JIRA_API_TOKEN: !Ref JIRAAPITokenSecret
           JIRA_INSTANCE: !Ref JIRAInstance
+          JIRA_ISSUETYPE: !Ref JIRAIssueType
+          JIRA_PROJECT_KEY: !Ref JIRAProjectKey
 
   AlarmSNSTopic:
     Type: AWS::SNS::Topic

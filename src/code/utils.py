@@ -118,12 +118,12 @@ def get_finding_digest(finding_id):
 def get_jira_finding(jira_client, finding_id,project_key, issuetype_name):
     digest = get_finding_digest(finding_id)
     created_before = jira_client.search_issues(
-        'Project = {0} AND issuetype = {1} AND (labels = aws-sec-{2})'.format(project_key, issuetype_name,digest))
+        'Project = {0} AND issuetype = "{1}" AND (labels = aws-sec-{2})'.format(project_key, issuetype_name,digest))
     # Should only exist once
     return created_before[0] if len(created_before) > 0 else None
 
 def get_jira_latest_updated_findings(jira_client,project_key, issuetype_name):
-    return jira_client.search_issues('Project = {0} AND issuetype = {1} AND updated  >= -2w'.format(project_key, issuetype_name), maxResults=False)
+    return jira_client.search_issues('Project = {0} AND issuetype = "{1}" AND updated  >= -2w'.format(project_key, issuetype_name), maxResults=False)
 
 # creates ticket based on the Security Hub finding
 def create_ticket(jira_client, project_key, issuetype_name, account, region, description, resources, severity, title, id):
@@ -184,7 +184,7 @@ def is_closed(jira_client, issue):
 
 
 def is_suppressed(jira_client, issue):
-    return issue.fields.status.name == "Risk Approved" or issue.fields.status.name == "Accepted False Positive"
+    return issue.fields.status.name == "Risk approved" or issue.fields.status.name == "Accepted false positive"
 
 
 def is_test_fix(jira_client, issue):
@@ -192,8 +192,7 @@ def is_test_fix(jira_client, issue):
 
 
 def reopen_jira_issue(jira_client, issue):
-    jira_client.transition_issue(
-        issue, 'Reopen', resolution={'name': "Unresolved"})
+    jira_client.transition_issue(issue, 'Reopen')
 
 
 def close_jira_issue(jira_client, issue):
@@ -203,8 +202,7 @@ def close_jira_issue(jira_client, issue):
     if status in ["Open", "Allocated for fix"]:
         jira_client.transition_issue(issue, "Mark for testing")
     if status in ["Open", "Allocated for fix", "Test fix"]:
-        jira_client.transition_issue(issue, "Mark as fixed", resolution={
-            'name': "Done"}, comment="Resolved automatically by security-hub-integration")
+        jira_client.transition_issue(issue, "Mark as resolved", comment="Resolved automatically by security-hub-integration")
     else:
         logger.error(
             "Cannot transition issue {0} as it's either marked as closed, awaiting risk acceptance or as false positive".format(issue))
