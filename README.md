@@ -53,8 +53,10 @@ The solution considers the following scenarios and perform the actions above:
 ### Step 2: Deploy
 1. Set AWS enviroment variables for credential, like AWS_SECRET_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION
 2. Execute `./deploy.sh [prod]"
-3. Upload your JIRA Personal Access Token (PAT) via AWS Secrets Manager console to `JIRA-Token` secret.
-
+3. Upload your JIRA Credentials to `JIRA-Token` via AWS Secrets Manager console:
+    * JIRA Enterprise: Add `auth` as `token_auth` and for `token` add Personal Access Token (PAT)
+    * JIRA Cloud: Add `auth` as `basic_auth` and add both `email` and `token` fields of your integration user API token.
+    
 ### Step 3: Including new automated controls
 
 You can specify type of findings which are automated using `GeneratorId` field. You can choose different findings to automate per region. For example, selecting that `eu-west-1` region is the only region creating IAM related tickets. To add controls, add its `GeneratorId` under its `config.json`.    

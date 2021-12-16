@@ -104,7 +104,7 @@ Resources:
   JIRAAPITokenSecret:
     Type: "AWS::SecretsManager::Secret"
     Properties:
-      Name: JiraAPIToken
+      Name: !Sub JiraAPIToken-${Environment}
       Description: "JIRA API Token"
 
   PermissionForEventsToInvokeIntegrationLambda:

@@ -7,8 +7,10 @@ import hashlib
 import base64
 import re
 import boto3
-from jira import JIRAError
+import json
+from jira import JIRA, JIRAError
 from botocore.exceptions import ClientError
+import jira
 
 logger = logging.getLogger('')
 
@@ -106,6 +108,18 @@ def get_finding_id_from(jira_ticket):
     matched = re.search(
         'Id%3D%255Coperator%255C%253AEQUALS%255C%253A([a-zA-Z0-9\.\-\_\:\/]+)', description)
     return matched.group(1) if matched and matched.group(1) else None
+
+def get_jira_client(secretsmanager_client,jira_instance,jira_credentials_secret):
+    region = os.environ['AWS_REGION']
+    jira_credentials = get_secret(secretsmanager_client, jira_credentials_secret, region)
+    auth_type = jira_credentials['auth']
+    jira_client = None
+    if auth_type == "basic_auth":
+        jira_client=JIRA(jira_instance, basic_auth=(jira_credentials['email'], jira_credentials['token']))
+    else:
+        jira_client=JIRA(jira_instance, token_auth=jira_credentials['token'])
+
+    return jira_client
 
 
 def get_finding_digest(finding_id):
@@ -232,4 +246,4 @@ def get_secret(client, secret_arn, region_name):
         else:
             secret = base64.b64decode(
                 get_secret_value_response['SecretBinary'])
-    return secret
+    return json.loads(secret)
