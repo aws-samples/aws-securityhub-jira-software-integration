@@ -32,7 +32,7 @@ The solution considers the following scenarios and perform the actions above:
 * JIRA Server instance.
 *Note*: JIRA Cloud is supported but JIRA workflow XML cannot be imported and needs to be recreated.
 * JIRA Administrator permissions. 
-* JIRA Username Personal Access Token (PAT). See [Using Personal Access Tokens](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html)
+* JIRA Username Personal Access Token (PAT) for JIRA Enterprise ([how to generate PAT tokens](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html)) or JIRA API Token for JIRA Cloud ([how to generate API tokens](https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/)). 
 * Cross account AWSOrganizationsReadOnlyAccess permissions to Organization management account. Required to retrieve Security Contact account tag. Alternatively, You can use default assignee to deploy without this permissions  
 * Access to AWS Audit account to escalate findings across Organization. Alternatively you can use any account to escalate only Security findings from that account.
 
@@ -54,8 +54,8 @@ The solution considers the following scenarios and perform the actions above:
 1. Set AWS enviroment variables for credential, like AWS_SECRET_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION
 2. Execute `./deploy.sh [prod]"
 3. Upload your JIRA Credentials to `JIRA-Token` via AWS Secrets Manager console:
-    * JIRA Enterprise: Add `auth` as `token_auth` and for `token` add Personal Access Token (PAT)
-    * JIRA Cloud: Add `auth` as `basic_auth` and add both `email` and `token` fields of your integration user API token.
+    * For JIRA Enterprise: Add `auth` as `token_auth` and for `token` add Personal Access Token (PAT)
+    * For JIRA Cloud: Add `auth` as `basic_auth` and add both `email` and `token` fields of your integration user API token.
     
 ### Step 3: Including new automated controls
 
