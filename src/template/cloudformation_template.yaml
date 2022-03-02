@@ -39,11 +39,10 @@ Parameters:
     Type: String
 
 Resources:
-  LambdaServiceRole:
+  LambdaImportRole:
     Type: "AWS::IAM::Role"
     Properties:
-      RoleName: !Sub securityhub-jira-lambda-role-${Environment}-${AWS::Region}
-      Description: "Lambda role for importing findings from Security Hub"
+      Description: "Lambda role for importing findings from Security Hub to JIRA"
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -54,7 +53,7 @@ Resources:
             Action:
               - "sts:AssumeRole"
       Policies:
-        - PolicyName: !Sub securityhub-jira-lambda-${Environment}-${AWS::Region}
+        - PolicyName: !Sub securityhub-jira-lambda-import-${Environment}-${AWS::Region}
           PolicyDocument:
             Statement:
               - Effect: Allow
@@ -76,6 +75,47 @@ Resources:
                   - "sts:AssumeRole"
                 Resource:
                   - !Sub "arn:aws:iam::*:role/${OrganizationAccessRole}"
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetResourcePolicy
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                  - secretsmanager:ListSecretVersionIds
+                Resource:
+                  - !Ref JIRAAPITokenSecret
+
+
+  LambdaRefreshRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Description: "Lambda role for refreshing findings in JIRA and Security Hub"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: !Sub securityhub-jira-lambda-refresh-${Environment}-${AWS::Region}
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "securityhub:BatchImportFindings"
+                  - "securityhub:UpdateFindings"
+                  - "securityhub:BatchUpdateFindings"
+                  - "securityhub:GetFindings"
+                Resource:
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "*"
               - Effect: Allow
                 Action:
                   - secretsmanager:GetResourcePolicy
@@ -127,7 +167,7 @@ Resources:
       Handler: "security_hub_integration.lambda_handler"
       Role:
         Fn::GetAtt:
-          - LambdaServiceRole
+          - LambdaImportRole
           - Arn
       Runtime: python3.7
       Timeout: 300
@@ -174,7 +214,7 @@ Resources:
       Handler: "sync_securityhub.lambda_handler"
       Role:
         Fn::GetAtt:
-          - LambdaServiceRole
+          - LambdaRefreshRole
           - Arn
       Runtime: python3.7
       Timeout: 300
@@ -196,7 +236,6 @@ Resources:
     Type: "AWS::CloudWatch::Alarm"
     Properties:
       AlarmDescription: "Lambda Critical Error Alarm for Security Hub -> JIRA integration"
-      AlarmName: !Sub securityhub-jira-alarm-import-${Environment}
       ActionsEnabled: true
       AlarmActions:
         - !Ref AlarmSNSTopic
@@ -217,7 +256,6 @@ Resources:
     Type: "AWS::CloudWatch::Alarm"
     Properties:
       AlarmDescription: "Lambda Critical Error Alarm for JIRA -> Security Hub integration"
-      AlarmName: !Sub securityhub-jira-alarm-refresh-${Environment}
       ActionsEnabled: true
       AlarmActions:
         - !Ref AlarmSNSTopic

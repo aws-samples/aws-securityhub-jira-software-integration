@@ -61,6 +61,16 @@ The solution considers the following scenarios and perform the actions above:
 
 You can specify type of findings which are automated using `GeneratorId` field. You can choose different findings to automate per region. For example, selecting that `eu-west-1` region is the only region creating IAM related tickets. To add controls, add its `GeneratorId` under its `config.json`.    
 
+## Troubleshooting
+
+### Access Denied for s3:SetBucketEncryption in LptBucket
+
+If you're using Control Tower Audit account, please make sure to update your Landing Zone to the latest version. See how to update [here](https://docs.aws.amazon.com/controltower/latest/userguide/configuration-updates.html).
+
+You can remove choose to either disable encryption and lifecycle policies from `lpt-basic.yml` or disable the following elective guardrails: 
+- Disallow Changes to Encryption Configuration for Amazon S3 Buckets.
+- Disallow Changes to Lifecycle Configuration for Amazon S3 Buckets
+
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.

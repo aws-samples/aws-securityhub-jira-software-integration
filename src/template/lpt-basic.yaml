@@ -14,6 +14,32 @@ Resources:
     Properties:
       AccessControl: Private
       BucketName: !Ref BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Status: Enabled
+            ExpirationInDays: 365
+            NoncurrentVersionExpirationInDays: 365
+            Transitions:
+              - TransitionInDays: 60
+                StorageClass: GLACIER
+              - TransitionInDays: 30
+                StorageClass: STANDARD_IA
+            NoncurrentVersionTransitions:
+              - TransitionInDays: 60
+                StorageClass: GLACIER
+              - TransitionInDays: 30
+                StorageClass: STANDARD_IA
 Outputs:
   LptBucket:
     Value: !Ref LptBucket

@@ -62,7 +62,7 @@ for regx in ${REGIONS[@]}; do
 	$AWS_CFN package --template src/template/cloudformation_template.yaml --s3-bucket "$BUCKET" --output-template-file dist/template/deployment-version.yaml 
 
 	# Validate template
-	$AWS_CFN validate-template --template-body file://$(pwd)/dist/template/deployment-version.yaml 
+	$AWS_CFN validate-template --template-body file://$(pwd)/dist/template/deployment-version.yaml > /dev/null || exit 1
 
 	$AWS_CFN deploy --template-file dist/template/deployment-version.yaml --capabilities CAPABILITY_NAMED_IAM --stack-name "$BASE-solution"  --parameter-overrides "${PARAMETERS[@]}"  
 
