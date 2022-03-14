@@ -13,48 +13,88 @@
         "actionName": "CreateJiraIssue",
         "actionDescription": "Create Jira Issue",
         "findings": [
-            {
-                "SchemaVersion": "2018-10-08",
-                "Id": "prowler-7.59-123456789012-eu-west-1-eu-west-1_Potential_secret_found_in_Lambda_function_pp-security-pipeline-NEW-pipeline_variables",
-                "ProductArn": "arn:aws:securityhub:eu-west-1:123456789012:product/123456789012/default",
-                "GeneratorId": "prowler-extra759",
-                "AwsAccountId": "123456789012",
-                "Types": [
-                  "Software and Configuration Checks"
-                ],
-                "FirstObservedAt": "2020-09-19T03:22:01Z",
-                "CreatedAt": "2020-09-15T07:00:56Z",
-                "UpdatedAt": "2020-09-22T07:01:38Z",
-                "Severity": {
-                  "Label": "HIGH",
-                  "Normalized": 70
-                },
-                "Title": "[extra759] Find secrets in Lambda functions variables",
-                "Description": "eu-west-1: Potential secret found in Lambda function pp-security-pipeline-notifications-NEW-pipeline variables",
-                "ProductFields": {
-                  "ProviderName": "Prowler",
-                  "ProviderVersion": "2.3.0RC3",
-                  "aws/securityhub/FindingId": "arn:aws:securityhub:eu-west-1:123456789012:product/123456789012/default/prowler-7.59-123456789012-eu-west-1-eu-west-1_Potential_secret_found_in_Lambda_function_pp-security-pipeline-notifications-pipeline_variables",
-                  "aws/securityhub/ProductName": "Default",
-                  "aws/securityhub/CompanyName": "Personal"
-                },
-                "Resources": [
-                  {
-                    "Type": "AwsLambdaFunction",
-                    "Id": "AWS::::Account:123456789012",
-                    "Partition": "aws",
-                    "Region": "eu-west-1"
+          {
+            "SchemaVersion": "2018-10-08",
+            "Id": "arn:aws:securityhub:eu-west-1:123456789012:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.8/finding/fba5a282-b865-41fe-bc9c-30357a1e87a7",
+            "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub",
+            "ProductName": "Security Hub",
+            "CompanyName": "AWS",
+            "Region": "eu-west-1",
+            "GeneratorId": "aws-foundational-security-best-practices/v/1.0.0/EC2.8",
+            "AwsAccountId": "123456789012",
+            "Types": [
+              "Software and Configuration Checks/Industry and Regulatory Standards/AWS-Foundational-Security-Best-Practices"
+            ],
+            "FirstObservedAt": "2021-02-04T07:57:13.662Z",
+            "LastObservedAt": "2022-03-13T18:33:41.172Z",
+            "CreatedAt": "2021-02-04T07:57:13.662Z",
+            "UpdatedAt": "2022-03-13T18:33:38.017Z",
+            "Severity": {
+              "Product": 70,
+              "Label": "HIGH",
+              "Normalized": 70,
+              "Original": "HIGH"
+            },
+            "Title": "EC2.8 EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)",
+            "Description": "This control checks whether your Amazon Elastic Compute Cloud (Amazon EC2) instance metadata version is configured with Instance Metadata Service Version 2 (IMDSv2). The control passes if HttpTokens is set to required for IMDSv2. The control fails if HttpTokens is set to optional.",
+            "Remediation": {
+              "Recommendation": {
+                "Text": "For directions on how to fix this issue, consult the AWS Security Hub Foundational Security Best Practices documentation.",
+                "Url": "https://docs.aws.amazon.com/console/securityhub/EC2.8/remediation"
+              }
+            },
+            "ProductFields": {
+              "StandardsArn": "arn:aws:securityhub:::standards/aws-foundational-security-best-practices/v/1.0.0",
+              "StandardsSubscriptionArn": "arn:aws:securityhub:eu-west-1:123456789012:subscription/aws-foundational-security-best-practices/v/1.0.0",
+              "ControlId": "EC2.8",
+              "RecommendationUrl": "https://docs.aws.amazon.com/console/securityhub/EC2.8/remediation",
+              "RelatedAWSResources:0/name": "securityhub-ec2-imdsv2-check-3604c928",
+              "RelatedAWSResources:0/type": "AWS::Config::ConfigRule",
+              "StandardsControlArn": "arn:aws:securityhub:eu-west-1:123456789012:control/aws-foundational-security-best-practices/v/1.0.0/EC2.8",
+              "aws/securityhub/ProductName": "Security Hub",
+              "aws/securityhub/CompanyName": "AWS",
+              "Resources:0/Id": "arn:aws:ec2:eu-west-1:123456789012:instance/i-0000000aaaaaaaaaa",
+              "aws/securityhub/FindingId": "arn:aws:securityhub:eu-west-1::product/aws/securityhub/arn:aws:securityhub:eu-west-1:123456789012:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.8/finding/fba5a282-b865-41fe-bc9c-30357a1e87a7"
+            },
+            "Resources": [
+              {
+                "Type": "AwsEc2Instance",
+                "Id": "arn:aws:ec2:eu-west-1:123456789012:instance/i-0000000aaaaaaaaaa",
+                "Partition": "aws",
+                "Region": "eu-west-1",
+                "Details": {
+                  "AwsEc2Instance": {
+                    "ImageId": "ami-05df1afb28e4fcaee",
+                    "VpcId": "vpc-aaaaaaaa",
+                    "SubnetId": "subnet-3242d868",
+                    "LaunchedAt": "2021-02-04T07:54:51.000Z",
+                    "NetworkInterfaces": [
+                      {
+                        "NetworkInterfaceId": "eni-bbbbbbbbbbbbbbbbb"
+                      }
+                    ]
                   }
-                ],
-                "Compliance": {
-                  "Status": "FAILED"
-                },
-                "WorkflowState": "NEW",
-                "Workflow": {
-                  "Status": "NEW"
-                },
-                "RecordState": "ACTIVE"
+                }
+              }
+            ],
+            "Compliance": {
+              "Status": "FAILED"
+            },
+            "WorkflowState": "NEW",
+            "Workflow": {
+              "Status": "NEW"
+            },
+            "RecordState": "ACTIVE",
+            "FindingProviderFields": {
+              "Severity": {
+                "Label": "HIGH",
+                "Original": "HIGH"
+              },
+              "Types": [
+                "Software and Configuration Checks/Industry and Regulatory Standards/AWS-Foundational-Security-Best-Practices"
+              ]
             }
+          }
         ]
     }
 }

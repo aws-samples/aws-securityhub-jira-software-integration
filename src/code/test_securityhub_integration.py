@@ -25,25 +25,17 @@ class TestSecurityHubtoJiraIntegration(unittest.TestCase):
                 finding["UpdatedAt"] = local_time
         return event
 
-    @patch('security_hub_integration.utils.ticket_creator')
+    @patch('security_hub_integration.utils.get_jira_client')
+    @patch('security_hub_integration.utils.create_ticket')
     @patch('security_hub_integration.utils.update_securityhub')
     @patch('security_hub_integration.utils.update_jira_assignee')
-    def test_custom_action_new_finding(self, ticket_creator, update_securityhub, update_jira_assignee):
+    def test_custom_action_new_finding(self, get_jira_client, create_ticket, update_securityhub, update_jira_assignee):
         event = self.load_test('test/custom_new.template')
+        get_jira_client.return_value = {}
         security_hub_integration.lambda_handler(event, None)
-        ticket_creator.assert_called_once()
+        create_ticket.assert_called_once()
         update_securityhub.assert_called_once()
         update_jira_assignee.assert_called_once()
-
-    @patch('security_hub_integration.utils.ticket_creator')
-    @patch('security_hub_integration.utils.update_securityhub')
-    @patch('security_hub_integration.utils.update_jira_assignee')
-    def test_custom_action_existing_ticket(self, ticket_creator, update_securityhub, update_jira_assignee):
-        event = self.load_test('test/custom_new_existing.template')
-        security_hub_integration.lambda_handler(event, None)
-        ticket_creator.assert_not_called()
-        update_securityhub.assert_not_called()
-        update_jira_assignee.assert_not_called()
 
     @patch('security_hub_integration.utils.update_securityhub')
     @patch('security_hub_integration.utils.close_jira_issue')
@@ -53,43 +45,39 @@ class TestSecurityHubtoJiraIntegration(unittest.TestCase):
         update_securityhub.assert_not_called()
         close_jira_issue.assert_not_called()
 
+    @patch('security_hub_integration.utils.get_jira_client')
+    @patch('security_hub_integration.utils.get_jira_finding')
     @patch('security_hub_integration.utils.update_securityhub')
     @patch('security_hub_integration.utils.close_jira_issue')
-    def test_imported_archived_existing_ticket(self, update_securityhub, close_jira_issue):
+    def test_imported_archived_existing_ticket(self, get_jira_client, get_jira_finding, update_securityhub, close_jira_issue):
         event = self.load_test(
             'test/imported_archived_existing.template')
+        get_jira_client.return_value = {}
+        get_jira_finding.return_value = ["Mock-123"]
         security_hub_integration.lambda_handler(event, None)
         update_securityhub.assert_called()
         close_jira_issue.assert_called()
 
-    @patch('security_hub_integration.utils.ticket_creator')
+    @patch('security_hub_integration.utils.get_jira_client')
+    @patch('security_hub_integration.utils.create_ticket')
     @patch('security_hub_integration.utils.update_securityhub')
     @patch('security_hub_integration.utils.update_jira_assignee')
-    def test_imported_new_automated_finding(self, ticket_creator, update_securityhub, update_jira_assignee):
-        event = self.load_test('test/imported_new_automated.template')
-        security_hub_integration.lambda_handler(event, None)
-        ticket_creator.assert_called()
-        update_securityhub.assert_called()
-        update_jira_assignee.assert_called()
-
-    @patch('security_hub_integration.utils.ticket_creator')
-    @patch('security_hub_integration.utils.update_securityhub')
-    @patch('security_hub_integration.utils.update_jira_assignee')
-    def test_imported_new_automated_standard_finding(self, ticket_creator, update_securityhub, update_jira_assignee):
+    def test_imported_new_automated_standard_finding(self, get_jira_client, create_ticket, update_securityhub, update_jira_assignee):
         event = self.load_test(
             'test/imported_new_automated_standard_check.template')
+        get_jira_client.return_value = {}
         security_hub_integration.lambda_handler(event, None)
-        ticket_creator.assert_called()
+        create_ticket.assert_called()
         update_securityhub.assert_called()
         update_jira_assignee.assert_called()
 
-    @patch('security_hub_integration.utils.ticket_creator')
+    @patch('security_hub_integration.utils.create_ticket')
     @patch('security_hub_integration.utils.update_securityhub')
     @patch('security_hub_integration.utils.update_jira_assignee')
-    def test_imported_new_not_automated_finding(self, ticket_creator, update_securityhub, update_jira_assignee):
+    def test_imported_new_not_automated_finding(self, create_ticket, update_securityhub, update_jira_assignee):
         event = self.load_test('test/imported_new_notautomated.template')
         security_hub_integration.lambda_handler(event, None)
-        ticket_creator.assert_not_called()
+        create_ticket.assert_not_called()
         update_securityhub.assert_not_called()
         update_jira_assignee.assert_not_called()
 

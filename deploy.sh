@@ -3,8 +3,7 @@ set -eio pipefail
 
 function print_usage (){
 	echo "------------------------------------------------------------------------------"
-	echo "	This script deploys the code without pipeline 
-	echo "  
+	echo "	This script deploys the code without pipeline"
 	echo "------------------------------------------------------------------------------"
 	echo "Usage: ./deploy.sh [env]"
 	echo "For example 1: ./deploy.sh prod"

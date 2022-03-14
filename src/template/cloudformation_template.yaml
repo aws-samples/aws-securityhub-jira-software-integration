@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT-0
 
 AWSTemplateFormatVersion: 2010-09-09
-Description: Bidirectional integration of Security Hub with JIRA
+Description: Bidirectional integration of Security Hub with JIRA (v1.0)
 
 Parameters:
   ScheduleExpression:

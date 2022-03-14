@@ -50,16 +50,27 @@ The solution considers the following scenarios and perform the actions above:
     * ISSUE_TYPE: JIRA Issuetype name: Examples would be "Bug", "Security Issue"
     * REGIONS:  List of regions where to deploy. Example: ("eu-west-1")
 
-### Step 2: Deploy
+### Step 2: Create custom action
+
+1. Use the aws security hub create-action-target CLI command on each region deployed to create a "CreateTicket" custom action:
+`aws securityhub create-action-target --name "CreateJiraIssue" --description "Create ticket in JIRA" --id "CreateJiraIssue" --region $AWS_REGION`
+
+### Step 3: Deploy
+
 1. Set AWS enviroment variables for credential, like AWS_SECRET_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION
 2. Execute `./deploy.sh [prod]"
 3. Upload your JIRA Credentials to `JIRA-Token` via AWS Secrets Manager console:
     * For JIRA Enterprise: Add `auth` as `token_auth` and for `token` add Personal Access Token (PAT)
     * For JIRA Cloud: Add `auth` as `basic_auth` and add both `email` and `token` fields of your integration user API token.
-    
-### Step 3: Including new automated controls
+
+### Step 4: Including new automated controls
 
 You can specify type of findings which are automated using `GeneratorId` field. You can choose different findings to automate per region. For example, selecting that `eu-west-1` region is the only region creating IAM related tickets. To add controls, add its `GeneratorId` under its `config.json`.    
+
+### Step 5: Test solution
+
+1. Open the [AWS Security Hub console](https://console.aws.amazon.com/securityhub/), under navigation panel, choose Findings. In the finding's list, select the checkbox for findings to escalate.
+2. under Actions, click on "CreateJiraIssue" actions.
 
 ## Troubleshooting
 
@@ -70,6 +81,11 @@ If you're using Control Tower Audit account, please make sure to update your Lan
 You can remove choose to either disable encryption and lifecycle policies from `lpt-basic.yml` or disable the following elective guardrails: 
 - Disallow Changes to Encryption Configuration for Amazon S3 Buckets.
 - Disallow Changes to Lifecycle Configuration for Amazon S3 Buckets
+
+## Deleting resources
+
+1. Search for `artifact-securityhub` and select `Empty` and confirm operation. 
+2. Access [AWS CloudFormation](https://console.aws.amazon.com/cloudformation/home) console. For both stacks,  `securityhub-jira-prod-solution` and `securityhub-jira-prod-artifact`, click on `Delete`.
 
 ## Security
 
