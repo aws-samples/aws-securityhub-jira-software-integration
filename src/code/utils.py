@@ -115,7 +115,7 @@ def get_jira_client(secretsmanager_client,jira_instance,jira_credentials_secret)
     auth_type = jira_credentials['auth']
     jira_client = None
     if auth_type == "basic_auth":
-        jira_client=JIRA(jira_instance, basic_auth=(jira_credentials['email'], jira_credentials['token']))
+        jira_client=JIRA("https://"+jira_instance, basic_auth=(jira_credentials['email'], jira_credentials['token']))
     else:
         jira_client=JIRA(jira_instance, token_auth=jira_credentials['token'])
 
