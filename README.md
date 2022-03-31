@@ -102,9 +102,9 @@ You can specify type of findings which are automated using `GeneratorId` field. 
 
 ### Access Denied for s3:SetBucketEncryption in LptBucket
 
-If you're using Control Tower Audit account, please make sure to update your Landing Zone to the latest version. See how to update [here](https://docs.aws.amazon.com/controltower/latest/userguide/configuration-updates.html).
+If you're using Control Tower Audit account, please make sure to update your Landing Zone to the latest Guardrails version. See how to update [here](https://docs.aws.amazon.com/controltower/latest/userguide/configuration-updates.html).
 
-You can remove choose to either disable encryption and lifecycle policies from `lpt-basic.yml` or disable the following elective guardrails: 
+You can otherwise choose to either remove encryption and lifecycle policies from `lpt-basic.yml` or disable the following elective guardrails: 
 - Disallow Changes to Encryption Configuration for Amazon S3 Buckets.
 - Disallow Changes to Lifecycle Configuration for Amazon S3 Buckets
 
