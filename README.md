@@ -4,26 +4,52 @@
 
 This solution supports a bidirectional integration between Security Hub and JIRA. Issues can be either created automatically or manually by using custom actions.
 
+## Features
+
+The solution allows you to:
+
+- Select which specific AWS Security Hub controls to automatically create in JIRA using their GeneratorId field (see Security Hub ASFF format).
+
+- Manually escalate tickets in JIRA through Security Hub console using Security Hub Custom Actions.
+
+- Assign tickets per AWS accounts using AWS Organization account "SecurityContactID" tags. A "default assignee" is used if no tag exists.
+
+- Automatically suppress AWS Security Hub findings that are marked as false positive or accepted risk in JIRA.
+
+- Automatically close JIRA tickets when its related finding is archived in Security Hub.
+
+- Reopen tickets when AWS Security findings reoccur.
+
 ## Description
 
 The solution uses a custom JIRA workflow to reflect the risk management of each finding. Workflow is inspired by [DinisCruz SecDevOps risk workflow](https://www.slideshare.net/DinisCruz/secdevops-risk-workflow-v06).
 
 ![Workflow](asset/workflow.png)
 
-The solution considers the following scenarios and perform the actions above:
-* When Security Hub finding is created, if its control is covered by automation or a custom action triggered for that finding, then the integration:
-    *  Creates a JIRA ticket
-    *  Marks finding as NOTIFIED
-    *  Adds a note with ticket ID
-    *  Assigns ticket according to `SecurityContactID` account tag (read through Organization management account). If not found, uses the `DefaultAssignee`.
-* When underlying finding are archived (i.e resolved), its related JIRA ticket is closed automatically.
-* When JIRA ticket is transitioned as false positive or accepted risk, its related Security Hub finding is suppressed.
-* When JIRA ticket is transitioned to closed, its Security Hub finding is resolved. 
-* When the same finding reoccurs (same `FindingId`), its JIRA ticket is reopen.
-
 ## Architecture
 
 ![Architecture](asset/architecture.png)
+
+## How it works
+
+1. A new finding AWS Foundational Security Best Practices standard is imported to Security Hub
+
+2. A Cloudwatch events trigger a Lambda function to identify whether to escalate the finding
+
+3. Lambda determines whether findings is escalated based on its configuration file and the finding's GeneratorId field. If so, it assumes a role to AWS Organization management account to obtain the correct JIRA ticket assignee ID using the from the "SecurityContactID" account tag. If not found, uses the `DefaultAssignee`.
+
+The Lambda creates the ticket in JIRA using credentials stored in Secrets Manager. It then updates the Security Hub finding to NOTIFIED and adds a note with a link to the related JIRA ticket. 
+
+Scenario 1: Developer addresses the issue
+
+4. The developer assignee addresses the underlying security finding and moves the ticket to "TEST FIX".
+5. When Security Hub finding is updated as ARCHIVED, the same Lambda from step 3 will automatically close the JIRA ticket.   
+
+*Scenario 2: Developer decides to accept the risk*
+
+4. The developer assignee decides to accept the risk and moves the ticket to "AWAITING RISK ACCEPTANCE". A security engineer reviews the request and finds business justification appropriate and moves the finding to "ACCEPTED RISK".
+
+5. A daily event is triggered causing the refresh Lambda to identify closed JIRA tickets and update their related Security Hub findings as SUPPRESSED.
 
 ## How to deploy?
 
