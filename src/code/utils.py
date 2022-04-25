@@ -163,7 +163,7 @@ def create_ticket(jira_client, project_key, issuetype_name, account, region, des
         * Access the account and verify the configuration.
         Acknowledge working on ticket by moving it to "Allocated for Fix".
         Once fixed, moved to test fix so Security validates the issue is addressed.
-        * If you think risk should we accepted, move it to "Awaiting Risk acceptance".
+        * If you think risk should be accepted, move it to "Awaiting Risk acceptance".
         This will require review by a Security engineer.
         * If you think is a false positive, transition it to "Mark as False Positive".
         This will get reviewed by a Security engineer and reopened/closed accordingly.
