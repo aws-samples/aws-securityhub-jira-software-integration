@@ -169,7 +169,7 @@ Resources:
         Fn::GetAtt:
           - LambdaImportRole
           - Arn
-      Runtime: python3.9
+      Runtime: python3.11
       Timeout: 300
       Code: ../../dist/lambda.zip
       Environment:
@@ -216,7 +216,7 @@ Resources:
         Fn::GetAtt:
           - LambdaRefreshRole
           - Arn
-      Runtime: python3.9
+      Runtime: python3.11
       Timeout: 300
       Code: ../../dist/lambda.zip
       Environment:
