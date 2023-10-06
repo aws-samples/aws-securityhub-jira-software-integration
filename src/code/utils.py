@@ -103,10 +103,14 @@ def update_jira_assignee(jira_client, issue, account):
 
 
 def get_finding_id_from(jira_ticket):
+    if jira_ticket is None or jira_ticket.fields.description is None:
+        logger.warning("The jira_ticket or its description is None, cannot extract finding ID.")
+        return None
+
     description = jira_ticket.fields.description
     # Searching for regex in description
     matched = re.search(
-        'Id%3D%255Coperator%255C%253AEQUALS%255C%253A([a-zA-Z0-9\.\-\_\:\/]+)', description)
+        'Id%3D%255Coperator%255C%253AEQUALS%255C%253A([a-zA-Z0-9\\.\\-\\_\\:\\/]+)', description)
     return matched.group(1) if matched and matched.group(1) else None
 
 def get_jira_client(secretsmanager_client,jira_instance,jira_credentials_secret):
