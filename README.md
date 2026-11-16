@@ -1,3 +1,9 @@
+> [!WARNING]
+> **This repository is deprecated and archived as of November 16, 2026.**
+> It is no longer maintained, and it may not work with current Jira Cloud APIs
+> (see issues #7 and #9). Do not use it for new deployments.
+> For current guidance, see the
+> [AWS Security Hub documentation](https://docs.aws.amazon.com/securityhub/).
 
 # aws-securityhub-jira-software-integration
 
