@@ -102,12 +102,39 @@ def update_jira_assignee(jira_client, issue, account):
         update_unassigned_ticket(jira_client, issue, message)
 
 
+def extract_text_from_adf(adf_content):
+    """
+    Recursively extracts all text content from an Atlassian Document Format (ADF) structure.
+    """
+    if isinstance(adf_content, str):
+        return adf_content
+    
+    if isinstance(adf_content, dict):
+        # If it's a text node, return the text
+        if adf_content.get('type') == 'text':
+            return adf_content.get('text', '')
+        
+        # Otherwise, recursively process content
+        content = adf_content.get('content', [])
+        return ''.join(extract_text_from_adf(item) for item in content)
+    
+    if isinstance(adf_content, list):
+        return ''.join(extract_text_from_adf(item) for item in adf_content)
+    
+    return ''
+
+
 def get_finding_id_from(jira_ticket):
     if jira_ticket is None or jira_ticket.fields.description is None:
         logger.warning("The jira_ticket or its description is None, cannot extract finding ID.")
         return None
 
     description = jira_ticket.fields.description
+    
+    # Handle ADF format (API v3 returns description as a dictionary)
+    if isinstance(description, dict):
+        description = extract_text_from_adf(description)
+    
     # Searching for regex in description
     matched = re.search(
         'Id%3D%255Coperator%255C%253AEQUALS%255C%253A([a-zA-Z0-9\\.\\-\\_\\:\\/]+)', description)
@@ -118,10 +145,11 @@ def get_jira_client(secretsmanager_client,jira_instance,jira_credentials_secret)
     jira_credentials = get_secret(secretsmanager_client, jira_credentials_secret, region)
     auth_type = jira_credentials['auth']
     jira_client = None
+    options = {'rest_api_version': '3'}
     if auth_type == "basic_auth":
-        jira_client=JIRA("https://"+jira_instance, basic_auth=(jira_credentials['email'], jira_credentials['token']))
+        jira_client=JIRA("https://"+jira_instance, basic_auth=(jira_credentials['email'], jira_credentials['token']), options=options)
     else:
-        jira_client=JIRA(jira_instance, token_auth=jira_credentials['token'])
+        jira_client=JIRA(jira_instance, token_auth=jira_credentials['token'], options=options)
 
     return jira_client
 
@@ -143,35 +171,107 @@ def get_jira_finding(jira_client, finding_id,project_key, issuetype_name):
 def get_jira_latest_updated_findings(jira_client,project_key, issuetype_name):
     return jira_client.search_issues('Project = {0} AND issuetype = "{1}" AND updated  >= -2w'.format(project_key, issuetype_name), maxResults=False)
 
+# Helper function to create ADF (Atlassian Document Format) content
+def create_adf_document(content_blocks):
+    """
+    Creates an Atlassian Document Format (ADF) document.
+    content_blocks is a list of paragraph/content definitions.
+    """
+    return {
+        "type": "doc",
+        "version": 1,
+        "content": content_blocks
+    }
+
+
+def create_adf_paragraph(text_content):
+    """Creates an ADF paragraph with plain text."""
+    return {
+        "type": "paragraph",
+        "content": [{"type": "text", "text": text_content}]
+    }
+
+
+def create_adf_heading(text, level=3):
+    """Creates an ADF heading."""
+    return {
+        "type": "heading",
+        "attrs": {"level": level},
+        "content": [{"type": "text", "text": text, "marks": [{"type": "strong"}]}]
+    }
+
+
+def create_adf_link(text, url):
+    """Creates an ADF paragraph with a link."""
+    return {
+        "type": "paragraph",
+        "content": [
+            {
+                "type": "text",
+                "text": text,
+                "marks": [{"type": "link", "attrs": {"href": url}}]
+            }
+        ]
+    }
+
+
+def create_adf_bullet_list(items):
+    """Creates an ADF bullet list from a list of strings."""
+    list_items = []
+    for item in items:
+        list_items.append({
+            "type": "listItem",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [{"type": "text", "text": item}]
+                }
+            ]
+        })
+    return {
+        "type": "bulletList",
+        "content": list_items
+    }
+
+
 # creates ticket based on the Security Hub finding
 def create_ticket(jira_client, project_key, issuetype_name, account, region, description, resources, severity, title, id):
     digest = get_finding_digest(id)
 
     finding_link = "https://{0}.console.aws.amazon.com/securityhub/home?region={0}#/findings?search=Id%3D%255Coperator%255C%253AEQUALS%255C%253A{1}".format(
         region, id)
+    
+    # Build description in Atlassian Document Format (ADF) for API v3
+    content_blocks = [
+        create_adf_heading("What is the problem?"),
+        create_adf_paragraph("We detected a security finding within the AWS account {} you are responsible for.".format(account)),
+    ]
+    
+    if resources:
+        content_blocks.append(create_adf_paragraph(resources))
+    
+    if description:
+        content_blocks.append(create_adf_paragraph(description))
+    
+    content_blocks.append(create_adf_link("Link to Security Hub finding", finding_link))
+    
+    content_blocks.append(create_adf_heading("What do I need to do with the ticket?"))
+    
+    content_blocks.append(create_adf_bullet_list([
+        'Access the account and verify the configuration. Acknowledge working on ticket by moving it to "Allocated for Fix". Once fixed, move to test fix so Security validates the issue is addressed.',
+        'If you think risk should be accepted, move it to "Awaiting Risk acceptance". This will require review by a Security engineer.',
+        'If you think is a false positive, transition it to "Mark as False Positive". This will get reviewed by a Security engineer and reopened/closed accordingly.'
+    ]))
+    
+    description_adf = create_adf_document(content_blocks)
+    
     issue_dict = {
         "project": {"key": project_key},
         "issuetype": {"name": issuetype_name},  
         "summary": "AWS Security Issue :: {} :: {} :: {}".format(account, region, title),
         "labels": ["aws-sec-%s" % digest],
         "priority": {"name": severity.capitalize()},
-        "description": """ *What is the problem?*
-        We detected a security finding within the AWS account {} you are responsible for.
-        {}
-        
-        {}
-
-        [Link to Security Hub finding|{}] 
-
-        *What do I need to do with the ticket?*
-        * Access the account and verify the configuration.
-        Acknowledge working on ticket by moving it to "Allocated for Fix".
-        Once fixed, moved to test fix so Security validates the issue is addressed.
-        * If you think risk should be accepted, move it to "Awaiting Risk acceptance".
-        This will require review by a Security engineer.
-        * If you think is a false positive, transition it to "Mark as False Positive".
-        This will get reviewed by a Security engineer and reopened/closed accordingly.
-          """.format(account, resources, description, finding_link)
+        "description": description_adf
     }
     new_issue = jira_client.create_issue(
         fields=issue_dict)  # writes dict to jira
